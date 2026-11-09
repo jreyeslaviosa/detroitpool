@@ -76,8 +76,30 @@ input[type=checkbox]{accent-color:#167254}
 #poolView{width:100%;border:0;display:block;min-height:720px}
 #poolView[hidden],main[hidden]{display:none}
 @media print{#poolView,.workspace-nav{display:none!important}}
+#powerView{max-width:1100px;margin:auto;padding:20px clamp(12px,3vw,34px);display:grid;gap:16px}
+#powerView[hidden]{display:none}
+.power-card{padding:16px;display:grid;gap:12px}
+.power-grid,.power-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(155px,100%),1fr));gap:12px}
+.power-metrics div{padding:12px;border:1px solid var(--line);border-radius:10px;background:#f6f8f7}
+.power-metrics strong{display:block;font-size:clamp(18px,3vw,27px);color:var(--accent)}
+.power-table{width:100%;border-collapse:collapse}
+.power-table th,.power-table td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+.power-scroll{overflow:auto}
+.power-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#powerPrintInputs{display:none}
+@media print{
+ #powerView{display:none}
+ body.print-power #report{display:none}
+ body.print-power #powerView{display:grid;max-width:none;padding:0;font-size:10pt}
+ body.print-power #powerInputs,body.print-power #powerPdf{display:none}
+ body.print-power #powerPrintInputs{display:block}
+ .power-card{border:0;padding:0;overflow:visible}
+ .power-scroll{overflow:visible}
+ .power-table tr{break-inside:avoid}
+ .power-table thead{display:table-header-group}
+}
 </style>
-<header><div class="masthead"><span class="brand" aria-hidden="true">◇</span><div><div class="eyebrow">MCDOUGALL CHURCH · DETROIT</div><h1>3D Cable Planner</h1></div></div><nav class="workspace-nav" aria-label="Planner sections"><button id="cableTab" type="button" aria-pressed="true" aria-controls="cableView">Cable Planner</button><button id="poolTab" type="button" aria-pressed="false" aria-controls="poolView">Pool Load</button></nav></header>
+<header><div class="masthead"><span class="brand" aria-hidden="true">◇</span><div><div class="eyebrow">MCDOUGALL CHURCH · DETROIT</div><h1>3D Cable Planner</h1></div></div><nav class="workspace-nav" aria-label="Planner sections"><button id="cableTab" type="button" aria-pressed="true" aria-controls="cableView">Cable Planner</button><button id="poolTab" type="button" aria-pressed="false" aria-controls="poolView">Pool Load</button><button id="powerTab" type="button" aria-pressed="false" aria-controls="powerView">Power Planning</button></nav></header>
 <main id="cableView">
 <section class="panel viewport" aria-label="3D floor plan">
 <div class="toolbar"><div class="views" aria-label="Drawing views"><button id="orbit" aria-pressed="true">3D view</button><button id="top" aria-pressed="false">Top view</button><button id="front" aria-pressed="false">Front view</button><button id="side" aria-pressed="false">Side view</button></div><div class="grid-controls"><label>Grid <input id="grid" type="number" min=".1" step="any" value="0.5"><span id="gridUnit">m</span></label><label><input id="snap" type="checkbox" checked> Snap</label></div></div>
@@ -106,6 +128,33 @@ input[type=checkbox]{accent-color:#167254}
 <p class="muted help">The tray is 6.43 m above the floor. Floor projector cables reach the nearer side wall, then follow the perimeter at floor level to the server room. Extra cable covers slack and the final connection inside the server room.</p>
 </section></aside></main>
 <iframe id="poolView" title="Pool Load Calculator" hidden></iframe>
+<section id="powerView" hidden aria-labelledby="powerTitle">
+<div class="panel power-card">
+  <div class="power-heading"><h1 id="powerTitle">Projector Power Plan</h1><button class="primary" type="button" id="powerPdf">Export PDF</button></div>
+  <p class="muted">McDougall Church · Optoma 7,200-lumen laser projectors</p>
+  <div class="power-grid" id="powerInputs">
+    <label>Full brightness · 505 W each<input id="powerFull" type="number" min="0" max="500" value="13"></label>
+    <label>Low brightness · 260 W each<input id="powerLow" type="number" min="0" max="500" value="0"></label>
+    <label>Supply voltage (V)<input id="powerVoltage" type="number" min="90" max="264" step="any" value="120"></label>
+    <label>Breaker rating<select id="powerBreaker"><option value="15">15 A</option><option value="20" selected>20 A</option></select></label>
+    <label>Assumed power factor<input id="powerFactor" type="number" min=".1" max="1" step="any" value=".90"></label>
+    <label>Other load per circuit (A)<input id="powerReserve" type="number" min="0" max="16" step="any" value="0"></label>
+  </div>
+  <p id="powerPrintInputs"></p>
+  <div class="power-metrics" aria-live="polite">
+    <div>Projectors<strong id="powerCount"></strong></div><div>Projector load<strong id="powerWatts"></strong></div>
+    <div>Estimated current across circuits<strong id="powerAmps"></strong></div><div>Estimated circuit groups<strong id="powerCircuits"></strong></div>
+  </div>
+  <p id="powerBudget" class="help"></p>
+</div>
+<div class="panel power-card">
+  <h2>Illustrative circuit grouping</h2>
+  <div class="power-scroll"><table class="power-table"><thead><tr><th>Group</th><th>Full</th><th>Low</th><th>Projector load</th><th>Estimated amps incl. other load</th></tr></thead><tbody id="powerRows"></tbody></table></div>
+  <p id="powerStatus" class="help" role="status"></p>
+  <p class="muted help">Uses 505 W as the full-brightness planning ceiling and estimates current as watts ÷ (voltage × power factor). The default power factor of 0.90 is an assumption. Grouping uses an 80% continuous-load budget for standard-rated breakers. Confirm projector nameplate current, startup draw, available circuits and all shared loads with the venue electrician before use.</p>
+  <p class="help"><a href="https://www.se.com/us/en/faqs/FA104355/">Continuous-load reference</a></p>
+</div>
+</section>
 <section id="report">
 <h1>McDougall Church cable schedule</h1>
 <p>Estimated routes to the server room, including any extra cable entered in the planner.</p>
@@ -535,6 +584,7 @@ refresh();
 {
   const cable=document.getElementById('cableView'),pool=document.getElementById('poolView');
   const cableTab=document.getElementById('cableTab'),poolTab=document.getElementById('poolTab');
+  const power=document.getElementById('powerView'),powerTab=document.getElementById('powerTab');
   let observer;
   pool.addEventListener('load',()=>{
     observer?.disconnect();
@@ -543,14 +593,67 @@ refresh();
     observer=new ResizeObserver(()=>{if(!pool.hidden)pool.style.height=Math.ceil(content.getBoundingClientRect().height)+'px';});
     observer.observe(content);
   });
-  function showPool(active){
-    cable.hidden=active;pool.hidden=!active;
-    cableTab.setAttribute('aria-pressed',String(!active));
-    poolTab.setAttribute('aria-pressed',String(active));
-    if(active&&!pool.hasAttribute('srcdoc'))pool.srcdoc=JSON.parse(document.getElementById('poolSource').textContent);
+  function showSection(section){
+    cable.hidden=section!=='cable';pool.hidden=section!=='pool';power.hidden=section!=='power';
+    cableTab.setAttribute('aria-pressed',String(!cable.hidden));
+    poolTab.setAttribute('aria-pressed',String(!pool.hidden));
+    powerTab.setAttribute('aria-pressed',String(!power.hidden));
+    if(!pool.hidden&&!pool.hasAttribute('srcdoc'))pool.srcdoc=JSON.parse(document.getElementById('poolSource').textContent);
+    document.body.classList.toggle('print-power',section==='power');
   }
-  cableTab.onclick=()=>showPool(false);
-  poolTab.onclick=()=>showPool(true);
+  cableTab.onclick=()=>showSection('cable');
+  poolTab.onclick=()=>showSection('pool');
+  powerTab.onclick=()=>showSection('power');
+
+}
+</script>
+<script>
+{
+  const get=id=>document.getElementById('power'+id);
+  const fields=['Full','Low','Voltage','Breaker','Factor','Reserve'].map(get);
+  function estimate(full,low,voltage,breaker,pf,reserve){
+    const watts=505*full+260*low;
+    const available=breaker*.8-reserve;
+    const maxWatts=available*voltage*pf;
+    const groups=[];
+    let fits=true;
+    for(const [count,draw,mode] of [[full,505,'full'],[low,260,'low']]){
+      if(count&&draw>maxWatts+1e-8){fits=false;break;}
+      for(let i=0;i<count;i++){
+        let group=groups.find(g=>g.watts+draw<=maxWatts+1e-8);
+        if(!group){group={full:0,low:0,watts:0};groups.push(group);}
+        group[mode]++;group.watts+=draw;
+      }
+    }
+    return {watts,amps:watts/(voltage*pf),available,groups:fits?groups:[],fits};
+  }
+  function updatePower(){
+    const rows=get('Rows');rows.replaceChildren();
+    const valid=fields.every(field=>field.validity.valid&&field.value!=='');
+    if(!valid){
+      for(const id of ['Count','Watts','Amps','Circuits'])get(id).textContent='—';
+      get('Budget').textContent='';get('PrintInputs').textContent='';
+      get('Status').textContent='Enter valid numbers to calculate the circuit groups.';
+      get('Pdf').disabled=true;return;
+    }
+    const [full,low,voltage,breaker,pf,reserve]=fields.map(field=>Number(field.value));
+    const plan=estimate(full,low,voltage,breaker,pf,reserve);
+    get('Count').textContent=full+low;
+    get('Watts').textContent=plan.watts.toLocaleString()+' W';
+    get('Amps').textContent=plan.amps.toFixed(2)+' A';
+    get('Circuits').textContent=plan.fits?plan.groups.length:'—';
+    get('Budget').textContent='Projector budget per circuit after other load: '+Math.max(0,plan.available).toFixed(2)+' A.';
+    get('PrintInputs').textContent=full+' full / '+low+' low · '+voltage+' V · '+breaker+' A breakers · PF '+pf.toFixed(2)+' · Other load '+reserve.toFixed(2)+' A per circuit';
+    get('Status').textContent=plan.fits?(plan.groups.length?'Group numbers are placeholders for verified venue circuits.':'Enter a projector count to build the schedule.'):'At least one projector exceeds the available budget on a single circuit under these assumptions.';
+    for(const [i,g] of plan.groups.entries()){
+      const row=rows.insertRow();
+      for(const value of [i+1,g.full,g.low,g.watts.toLocaleString()+' W',(g.watts/(voltage*pf)+reserve).toFixed(2)+' A'])row.insertCell().textContent=value;
+    }
+    get('Pdf').disabled=false;
+  }
+  fields.forEach(field=>field.addEventListener('input',updatePower));
+  get('Pdf').onclick=()=>window.print();
+  updatePower();
 }
 </script>
 </html>
